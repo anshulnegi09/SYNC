@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid'; // Import UUID
+import { randomUUID } from 'crypto'; // Built-in Node.js crypto module
 import { generateToken } from '../utils/authHelpers.js';
 import ChatRoom from '../models/ChatRoom.js';
 import Message from '../models/Message.js';
@@ -46,7 +46,7 @@ const mutationResolvers = {
         throw new Error('Owner not found');
       }
   
-      const joinLink = uuidv4(); // Generate a unique link
+      const joinLink = randomUUID(); // Generate a unique link
   
       const chatRoom = await ChatRoom.create({
         name,
@@ -84,12 +84,22 @@ const mutationResolvers = {
         throw new Error('Chat room or user not found');
       }
 
-      if (!chatRoom.participants.includes(userId)) {
+      // Use .toString() for proper ObjectId comparison
+      const alreadyJoined = chatRoom.participants.some(
+        (p) => p.toString() === userId
+      );
+
+      if (!alreadyJoined) {
         chatRoom.participants.push(userId);
         await chatRoom.save();
       }
 
-      await chatRoom.populate('participants');
+      // Populate all fields required by the ChatRoom GraphQL type
+      await chatRoom.populate([
+        { path: 'participants' },
+        { path: 'owner' },
+        { path: 'messages' },
+      ]);
 
       return chatRoom;
     } catch (error) {
@@ -159,22 +169,16 @@ const mutationResolvers = {
         throw new Error('Message or user not found');
       }
 
-      // Check if user hasn't already read the message
       if (!message.readBy.some(receipt => receipt.user.toString() === userId)) {
-        message.readBy.push({
-          user: userId,
-          readAt: new Date()
-        });
+        message.readBy.push({ user: userId, readAt: new Date() });
         await message.save();
 
-        // Populate the message data
         const populatedMessage = await message.populate([
           { path: 'sender' },
           { path: 'chatRoom' },
           { path: 'readBy.user' }
         ]);
 
-        // Publish the read receipt
         await pubsub.publish(`MESSAGE_READ.${message.chatRoom}`, {
           messageRead: populatedMessage
         });
@@ -187,7 +191,71 @@ const mutationResolvers = {
       console.error('Error marking message as read:', error);
       throw new Error('Error marking message as read');
     }
-  }
+  },
+
+  deleteChatRoom: async (_, { chatRoomId, userId }) => {
+    try {
+      const chatRoom = await ChatRoom.findById(chatRoomId);
+      if (!chatRoom) throw new Error('Chat room not found');
+
+      // Only the owner can delete
+      if (chatRoom.owner.toString() !== userId) {
+        throw new Error('Only the owner can delete this chat room');
+      }
+
+      // Delete all messages in the room
+      await Message.deleteMany({ chatRoom: chatRoomId });
+
+      // Delete the room
+      await ChatRoom.findByIdAndDelete(chatRoomId);
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting chat room:', error.message);
+      throw new Error(error.message);
+    }
+  },
+
+  updateProfilePicture: async (_, { userId, profilePicture }) => {
+    try {
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { profilePicture },
+        { new: true }
+      );
+      if (!user) throw new Error('User not found');
+      return user;
+    } catch (error) {
+      console.error('Error updating profile picture:', error.message);
+      throw new Error('Error updating profile picture');
+    }
+  },
+
+  updateUsername: async (_, { userId, username }) => {
+    try {
+      // Basic validation
+      if (!username || username.trim().length < 3) {
+        throw new Error('Username must be at least 3 characters long');
+      }
+
+      // Check if another user already has this username
+      const existingUser = await User.findOne({ username });
+      if (existingUser && existingUser._id.toString() !== userId) {
+        throw new Error('Username is already taken');
+      }
+
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { username: username.trim() },
+        { new: true }
+      );
+      if (!user) throw new Error('User not found');
+      return user;
+    } catch (error) {
+      console.error('Error updating username:', error.message);
+      throw new Error(error.message || 'Error updating username');
+    }
+  },
 };
 
 export default mutationResolvers;

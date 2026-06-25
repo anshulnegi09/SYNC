@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { gql, useMutation } from '@apollo/client'
-import { useNavigate } from 'react-router-dom'
-import { Link } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { Eye, EyeOff, UserPlus, Upload } from 'lucide-react'
 
 const SIGNUP = gql`
   mutation Signup($username: String!, $email: String!, $password: String!, $profilePicture: String) {
@@ -9,6 +9,8 @@ const SIGNUP = gql`
       user {
         id
         username
+        email
+        profilePicture
       }
       token
     }
@@ -20,166 +22,189 @@ const Signup = () => {
     username: '',
     email: '',
     password: '',
-    profilePicture: ''
-  });
-  const navigate = useNavigate();
-  const [signup, { loading }] = useMutation(SIGNUP, {
-    onCompleted: data => {
-      localStorage.setItem('token', data.signup.token);
-      navigate('/Login');
-    },
-    onError: error => {
-      console.log(error);
-    }
-  });
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await signup({
-        variables: {
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          profilePicture: formData.profilePicture
-        }
-      });
-    } catch (err) {
-      console.error('Submit Error:', err);
-    }
-  };
+    profilePicture: null,
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
+  const [signup, { loading }] = useMutation(SIGNUP)
+  const navigate = useNavigate()
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, profilePicture: reader.result }));
+    const file = e.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_SIZE = 400;
+        let { width, height } = img;
+        if (width > height && width > MAX_SIZE) {
+          height *= MAX_SIZE / width;
+          width = MAX_SIZE;
+        } else if (height > MAX_SIZE) {
+          width *= MAX_SIZE / height;
+          height = MAX_SIZE;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        setFormData((prev) => ({ ...prev, profilePicture: canvas.toDataURL('image/jpeg', 0.8) }));
       };
-      reader.readAsDataURL(file);
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setErrorMsg('')
+    try {
+      const response = await signup({ variables: formData })
+      const { token, user } = response.data.signup
+      localStorage.setItem('token', token)
+      localStorage.setItem('username', user.username)
+      localStorage.setItem('userId', user.id)
+      localStorage.setItem('email', user.email)
+      localStorage.setItem('profilePicture', user.profilePicture || '')
+      // Dispatch event so other components know profile changed
+      window.dispatchEvent(new Event('profileUpdated'))
+      navigate('/chat-rooms')
+    } catch (err) {
+      setErrorMsg(err.message || 'Signup failed. Please try again.')
     }
-  };
+  }
+
+  const inputClass =
+    'w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/50 transition-all duration-200 text-sm'
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 py-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <img
-            className="mx-auto h-12 w-auto"
-            src="https://freeiconshop.com/wp-content/uploads/edd/sync-flat.png"
-            alt="Sync"
-          />
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
-            Create your account
-          </h2>
-           
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <input
-                name="username"
-                type="text"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 bg-gray-800 border border-purple-500 placeholder-gray-500 text-gray-300 rounded-t-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm mb-4"
-                placeholder="Username"
-                value={formData.username}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <input
-                name="email"
-                type="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 bg-gray-800 border border-purple-500 placeholder-gray-500 text-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm mb-4"
-                placeholder="Email address"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <input
-                name="password"
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 bg-gray-800 border border-purple-500 placeholder-gray-500 text-gray-300 rounded-b-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm mb-4"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </div>
+    <div className="min-h-screen flex items-center justify-center bg-[#0f0f13] px-4 relative overflow-hidden py-10">
+
+      {/* Background orbs */}
+      <div className="orb w-96 h-96 bg-purple-700/20 top-[-80px] left-[-80px] pointer-events-none" />
+      <div className="orb w-64 h-64 bg-indigo-600/15 bottom-[-60px] right-[-60px] pointer-events-none" />
+
+      {/* Dotted grid */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ backgroundImage: 'radial-gradient(rgba(168,85,247,0.08) 1px, transparent 1px)', backgroundSize: '28px 28px' }}
+      />
+
+      <div className="relative z-10 w-full max-w-md">
+        <div className="glass-strong rounded-2xl p-8 shadow-2xl" style={{ animation: 'fadeIn 0.4s ease forwards' }}>
+
+          {/* Logo + title */}
+          <div className="text-center mb-8">
+            <img src="https://i.imgur.com/6186lid.png" alt="Sync" className="h-12 w-auto mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-white">Create your account</h1>
+            <p className="text-gray-400 text-sm mt-1">Join SYNC and start chatting</p>
           </div>
 
-          <div>
-            <label 
-              htmlFor="profile-picture" 
-              className="block text-sm font-medium text-gray-300 mb-2"
-            >
-              Profile Picture
-            </label>
-            <label 
-              htmlFor="profile-picture" 
-              className="flex items-center justify-center w-full px-3 py-2 border border-gray-300 rounded-md cursor-pointer bg-gray-800 hover:bg-gray-700"
-            >
-              <img 
-                src="https://cdn-icons-png.flaticon.com/128/8191/8191581.png" 
-                alt="Upload Icon" 
-                className="w-6 h-6 mr-2"
-              />
-              <input 
-                id="profile-picture" 
-                type="file" 
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-            </label>
-          </div>
-
-          {formData.profilePicture && (
-            <div className="flex justify-center mb-4">
-              <div className="relative w-16 h-16 rounded-full overflow-hidden">
-                <img 
-                  src={formData.profilePicture} 
-                  alt="Profile Preview" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
+          {/* Error */}
+          {errorMsg && (
+            <div className="mb-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              {errorMsg}
             </div>
           )}
 
-          <div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Username */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Username</label>
+              <input name="username" type="text" required placeholder="cooluser123" value={formData.username} onChange={handleChange} className={inputClass} />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Email</label>
+              <input name="email" type="email" required placeholder="you@example.com" value={formData.email} onChange={handleChange} className={inputClass} />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Password</label>
+              <div className="relative">
+                <input
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`${inputClass} pr-10`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 p-0 border-0 bg-transparent"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Profile picture */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Profile Picture <span className="text-gray-500">(optional)</span></label>
+              <label
+                htmlFor="profile-picture"
+                className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-white/5 border border-dashed border-white/20 rounded-xl cursor-pointer hover:border-purple-500/50 hover:bg-purple-500/5 transition-all duration-200 text-gray-400 hover:text-gray-300 text-sm"
+              >
+                {formData.profilePicture ? (
+                  <div className="flex items-center gap-3">
+                    <img src={formData.profilePicture} alt="Preview" className="w-8 h-8 rounded-full object-cover border-2 border-purple-500" />
+                    <span className="text-purple-400">Photo selected — click to change</span>
+                  </div>
+                ) : (
+                  <>
+                    <Upload size={16} />
+                    <span>Upload a photo</span>
+                  </>
+                )}
+                <input id="profile-picture" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+              </label>
+            </div>
+
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="btn-glow w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-white font-semibold text-sm mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <>
+                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Signing up...
-                </span>
+                  Creating account...
+                </>
               ) : (
-                'Sign up'
+                <>
+                  <UserPlus size={16} />
+                  Create Account
+                </>
               )}
             </button>
-            <h3 className='text-gray-300 text-sm mt-4'>Already have an account? <Link to="/Login" className="text-purple-500 hover:text-purple-700">Sign in</Link></h3>
-          </div>
-        </form>
+          </form>
+
+          <p className="text-center text-gray-500 text-sm mt-6">
+            Already have an account?{' '}
+            <Link to="/login" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
+              Sign in
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default Signup;
+export default Signup

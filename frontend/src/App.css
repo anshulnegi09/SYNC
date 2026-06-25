@@ -1,8 +1,7 @@
 /* Base Styles */
 .App {
-  text-align: center;
   min-height: 100vh;
-  background-color: #121212;
+  background-color: #0f0f13;
   color: #e0e0e0;
   display: flex;
   flex-direction: column;
@@ -13,17 +12,12 @@
   overflow: hidden;
 }
 
-/* Header Styles */
+/* Header Styles — no extra padding, handled by Tailwind in Header.jsx */
 header {
   width: 100%;
-  padding: 2rem 2rem 0 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* position: fixed; */
-  /* margin-bottom: 1rem; */
- 
-
 }
 
 /* Chat Room Layout */
@@ -38,7 +32,8 @@ header {
   width: 100%;
   min-height: 100vh;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* Body Reset */
@@ -47,8 +42,7 @@ body {
   padding: 0;
   min-width: 100vw;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
+  overflow: hidden;
 }
 
 /* Message List Styles */

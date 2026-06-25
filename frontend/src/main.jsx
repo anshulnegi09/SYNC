@@ -9,9 +9,17 @@ import { getMainDefinition } from '@apollo/client/utilities'
 import './index.css'
 import App from './App.jsx'
 
-// Create a WebSocket link
+// Determine base URLs — defaults to local dev
+const HTTP_URL = import.meta.env.VITE_GRAPHQL_HTTP_URL || 'http://localhost:4000/graphql';
+const WS_URL = import.meta.env.VITE_GRAPHQL_WS_URL || 'ws://localhost:4000/graphql';
+
+// Create a WebSocket link — passes auth token via connectionParams
 const wsLink = new GraphQLWsLink(createClient({
-  url: 'wss://sync-jqrt.onrender.com/graphql',
+  url: WS_URL,
+  connectionParams: () => {
+    const token = localStorage.getItem('token');
+    return token ? { authorization: `Bearer ${token}` } : {};
+  },
 }))
 
 // Set up the authentication link
@@ -27,7 +35,7 @@ const authLink = setContext((_, { headers }) => {
 
 // Create an HTTP link
 const httpLink = new HttpLink({
-  uri: 'https://sync-jqrt.onrender.com/graphql'
+  uri: HTTP_URL
 });
 
 // Split links based on operation type

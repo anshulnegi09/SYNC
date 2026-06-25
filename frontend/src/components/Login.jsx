@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { gql, useMutation } from '@apollo/client'
-import { useNavigate } from 'react-router-dom'
-import { Link } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { Eye, EyeOff, LogIn } from 'lucide-react'
 
 const LOGIN = gql`
   mutation Login($email: String!, $password: String!) {
@@ -9,6 +9,8 @@ const LOGIN = gql`
       user {
         id
         username
+        email
+        profilePicture
       }
       token
     }
@@ -18,90 +20,129 @@ const LOGIN = gql`
 const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [login, { data, loading, error }] = useMutation(LOGIN)
+  const [showPassword, setShowPassword] = useState(false)
+  const [login, { loading }] = useMutation(LOGIN)
+  const [errorMsg, setErrorMsg] = useState('')
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setErrorMsg('')
     try {
       const response = await login({ variables: { email, password } })
       const { token, user } = response.data.login
       localStorage.setItem('token', token)
       localStorage.setItem('username', user.username)
       localStorage.setItem('userId', user.id)
+      localStorage.setItem('email', user.email)
+      localStorage.setItem('profilePicture', user.profilePicture || '')
       navigate('/chat-rooms')
     } catch (err) {
-      console.error('Login Error:', err)
-      alert('Login failed: ' + (err.message || 'An error occurred.'))
+      setErrorMsg(err.message || 'Login failed. Please try again.')
     }
   }
 
-  if (loading) return <p>Loading...</p>
-  if (error) return <p>Error: {error.message || 'An error occurred during login.'}</p>
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <img
-            className="mx-auto h-12 w-auto"
-            src="https://freeiconshop.com/wp-content/uploads/edd/sync-flat.png"
-            alt="Sync"
-          />
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
-            Sign In to Your Account
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+    <div className="min-h-screen flex items-center justify-center bg-[#0f0f13] px-4 relative overflow-hidden">
+
+      {/* Background orbs */}
+      <div className="orb w-96 h-96 bg-purple-700/20 top-[-80px] right-[-80px] pointer-events-none" />
+      <div className="orb w-64 h-64 bg-indigo-600/15 bottom-[-60px] left-[-60px] pointer-events-none" />
+
+      {/* Dotted grid */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ backgroundImage: 'radial-gradient(rgba(168,85,247,0.08) 1px, transparent 1px)', backgroundSize: '28px 28px' }}
+      />
+
+      <div className="relative z-10 w-full max-w-md">
+        {/* Card */}
+        <div className="glass-strong rounded-2xl p-8 shadow-2xl" style={{ animation: 'fadeIn 0.4s ease forwards' }}>
+
+          {/* Logo + title */}
+          <div className="text-center mb-8">
+            <img src="https://i.imgur.com/6186lid.png" alt="Sync" className="h-12 w-auto mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-white">Welcome back</h1>
+            <p className="text-gray-400 text-sm mt-1">Sign in to continue to SYNC</p>
+          </div>
+
+          {/* Error */}
+          {errorMsg && (
+            <div className="mb-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              {errorMsg}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email */}
             <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Email</label>
               <input
                 name="email"
                 type="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 bg-gray-800 border border-purple-500 placeholder-gray-500 text-gray-300 rounded-t-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm mb-4"
-                placeholder="Email"
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/50 transition-all duration-200 text-sm"
               />
             </div>
-            <div>
-              <input
-                name="password"
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 bg-gray-800 border border-purple-500 placeholder-gray-500 text-gray-300 rounded-b-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm mb-4"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
 
-          <div>
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Password</label>
+              <div className="relative">
+                <input
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2.5 pr-10 bg-white/5 border border-white/10 rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/50 transition-all duration-200 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors p-0 border-0 bg-transparent"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="btn-glow w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-white font-semibold text-sm mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <>
+                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
                   Signing in...
-                </span>
+                </>
               ) : (
-                'Sign In'
+                <>
+                  <LogIn size={16} />
+                  Sign In
+                </>
               )}
             </button>
-          </div>
-          <h3 className='text-gray-300 text-sm mt-4'>Don't have an account? <Link to="/signup" className="text-purple-500 hover:text-purple-700">Sign up</Link></h3>
-        </form>
+          </form>
+
+          <p className="text-center text-gray-500 text-sm mt-6">
+            Don't have an account?{' '}
+            <Link to="/signup" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
+              Sign up free
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )
 }
 
-export default Login;
+export default Login

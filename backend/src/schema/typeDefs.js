@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-express';
+import { gql } from 'graphql-tag';
 
 const typeDefs = gql`
   scalar Date
@@ -43,11 +43,14 @@ const typeDefs = gql`
   type Mutation {
     sendMessage(chatRoomId: ID!, content: String!, senderId: ID!): Message!
     createChatRoom(name: String!, ownerId: ID!): ChatRoom!
+    deleteChatRoom(chatRoomId: ID!, userId: ID!): Boolean!
     joinChatRoom(chatRoomId: ID!, userId: ID!): ChatRoom!
     joinChatRoomByLink(joinLink: String!, userId: ID!): ChatRoom!
     signup(username: String!, email: String!, password: String!, profilePicture: String): AuthPayload!
     login(email: String!, password: String!): AuthPayload!
     markMessageAsRead(messageId: ID!, userId: ID!): Message!
+    updateProfilePicture(userId: ID!, profilePicture: String!): User!
+    updateUsername(userId: ID!, username: String!): User!
   }
 
   type Subscription {

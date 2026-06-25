@@ -3,7 +3,9 @@ dotenv.config();
 
 import http from 'http';
 import express from 'express';
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { execute, subscribe } from 'graphql';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
@@ -16,31 +18,63 @@ connectDB();
 
 const app = express();
 
-// Enable CORS
-app.use(cors());
-
-// Apollo Server Setup
-const apolloServer = new ApolloServer({
-  schema,
-  context: ({ req }) => {
-    const token = req.headers.authorization || '';
-    return { req, token };
-  },
-});
-
-await apolloServer.start();
-apolloServer.applyMiddleware({ app });
-
 // HTTP Server
 const httpServer = http.createServer(app);
 
-// WebSocket Server
+// WebSocket Server for subscriptions
 const wsServer = new WebSocketServer({
   server: httpServer,
   path: '/graphql',
 });
 
-useServer({ schema, execute, subscribe }, wsServer);
+// Set up graphql-ws server — must pass execute & subscribe explicitly
+const serverCleanup = useServer(
+  {
+    schema,
+    execute,
+    subscribe,
+    context: (ctx) => {
+      // Forward the auth token from WebSocket connectionParams
+      const token = ctx.connectionParams?.authorization || '';
+      return { token };
+    },
+  },
+  wsServer
+);
+
+// Apollo Server Setup (v4)
+const apolloServer = new ApolloServer({
+  schema,
+  plugins: [
+    // Proper shutdown for the HTTP server
+    ApolloServerPluginDrainHttpServer({ httpServer }),
+    // Proper shutdown for the WebSocket server
+    {
+      async serverWillStart() {
+        return {
+          async drainServer() {
+            await serverCleanup.dispose();
+          },
+        };
+      },
+    },
+  ],
+});
+
+await apolloServer.start();
+
+// Apply middleware
+app.use(
+  '/graphql',
+  cors(),
+  express.json({ limit: '10mb' }),
+  expressMiddleware(apolloServer, {
+    context: async ({ req }) => {
+      const token = req.headers.authorization || '';
+      return { req, token };
+    },
+  })
+);
 
 // Server Port
 const PORT = process.env.PORT || 4000;

@@ -39,9 +39,8 @@ const CREATE_CHAT_ROOM = gql`
 `
 
 const ChatRoomList = () => {
-  const { loading, error, data, refetch } = useQuery(GET_CHAT_ROOMS, {
-    pollInterval: 2000,
-    fetchPolicy: 'network-only'
+  const { loading, error, data } = useQuery(GET_CHAT_ROOMS, {
+    fetchPolicy: 'cache-and-network'
   })
   const [createChatRoom] = useMutation(CREATE_CHAT_ROOM)
   const [chatRooms, setChatRooms] = useState([])
@@ -63,13 +62,7 @@ const ChatRoomList = () => {
     }
   }, [data])
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      refetch();
-    }, 2000);
 
-    return () => clearInterval(intervalId);
-  }, [refetch]);
 
   const handleCreateChatRoom = async () => {
     try {
