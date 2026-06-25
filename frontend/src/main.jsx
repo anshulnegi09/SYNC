@@ -9,9 +9,9 @@ import { getMainDefinition } from '@apollo/client/utilities'
 import './index.css'
 import App from './App.jsx'
 
-// Determine base URLs — defaults to local dev
-const HTTP_URL = import.meta.env.VITE_GRAPHQL_HTTP_URL || 'http://localhost:4000/graphql';
-const WS_URL = import.meta.env.VITE_GRAPHQL_WS_URL || 'ws://localhost:4000/graphql';
+// Determine base URLs — defaults to your live Render backend
+const HTTP_URL = import.meta.env.VITE_GRAPHQL_HTTP_URL || 'https://sync-jqrt.onrender.com/graphql';
+const WS_URL = import.meta.env.VITE_GRAPHQL_WS_URL || 'wss://sync-jqrt.onrender.com/graphql';
 
 // Create a WebSocket link — passes auth token via connectionParams
 const wsLink = new GraphQLWsLink(createClient({
