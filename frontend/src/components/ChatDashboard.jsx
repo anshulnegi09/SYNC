@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gql, useQuery, useMutation } from '@apollo/client';
 import { Plus, LogIn, ChevronRight, Hash } from 'lucide-react';
@@ -41,6 +41,12 @@ const ChatDashboard = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   const userId = localStorage.getItem('userId');
+
+  useEffect(() => {
+    if (!userId) {
+      navigate('/login');
+    }
+  }, [userId, navigate]);
 
   const { data, refetch: refetchRooms } = useQuery(GET_CHAT_ROOMS, { fetchPolicy: 'cache-and-network' });
   const [createChatRoom, { loading: creating }] = useMutation(CREATE_CHAT_ROOM);

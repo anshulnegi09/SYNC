@@ -36,6 +36,7 @@ const Login = () => {
       localStorage.setItem('userId', user.id)
       localStorage.setItem('email', user.email)
       localStorage.setItem('profilePicture', user.profilePicture || '')
+      window.dispatchEvent(new Event('profileUpdated'))
       
       const pendingJoinLink = localStorage.getItem('pendingJoinLink')
       if (pendingJoinLink) {

@@ -56,6 +56,7 @@ const Header = () => {
     localStorage.removeItem('userId')
     localStorage.removeItem('email')
     localStorage.removeItem('profilePicture')
+    window.dispatchEvent(new Event('profileUpdated'))
     navigate('/')
   }
 
