@@ -19,7 +19,7 @@ const Header = () => {
         {username ? (
           <Link to="/" className="flex items-center space-x-2">
             <img 
-              src="https://freeiconshop.com/wp-content/uploads/edd/sync-flat.png" 
+              src="https://i.imgur.com/6186lid.png" 
               alt="Sync" 
               className="h-12 w-auto" 
             />
@@ -28,7 +28,7 @@ const Header = () => {
         ) : (
           <Link to="/" className="flex items-center space-x-2">
             <img 
-              src="https://freeiconshop.com/wp-content/uploads/edd/sync-flat.png" 
+              src="https://i.imgur.com/6186lid.png" 
               alt="Sync" 
               className="h-12 w-auto" 
             />
