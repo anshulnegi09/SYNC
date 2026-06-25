@@ -4,8 +4,8 @@ import { toast } from 'react-toastify'
 import { useParams, useNavigate } from 'react-router-dom'
 
 const JOIN_CHAT_ROOM_BY_LINK = gql`
-  mutation JoinChatRoomByLink($joinLink: String!, $userId: ID!) {
-    joinChatRoomByLink(joinLink: $joinLink, userId: $userId) {
+  mutation JoinChatRoomByLink($joinLink: String!) {
+    joinChatRoomByLink(joinLink: $joinLink) {
       id
       name
       participants {
@@ -32,7 +32,7 @@ const JoinChatRoom = () => {
       }
 
       try {
-        await joinChatRoomByLink({ variables: { joinLink, userId } })
+        await joinChatRoomByLink({ variables: { joinLink } })
         toast.success('Successfully joined the room!')
         navigate('/chat-rooms')
       } catch (error) {

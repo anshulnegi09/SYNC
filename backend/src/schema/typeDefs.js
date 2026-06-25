@@ -31,7 +31,7 @@ const typeDefs = gql`
     owner: User!
     participants: [User!]!
     messages: [Message!]!
-    joinLink: String!
+    joinLink: String
   }
 
   type Query {
@@ -41,16 +41,16 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    sendMessage(chatRoomId: ID!, content: String!, senderId: ID!): Message!
-    createChatRoom(name: String!, ownerId: ID!): ChatRoom!
-    deleteChatRoom(chatRoomId: ID!, userId: ID!): Boolean!
-    joinChatRoom(chatRoomId: ID!, userId: ID!): ChatRoom!
-    joinChatRoomByLink(joinLink: String!, userId: ID!): ChatRoom!
+    sendMessage(chatRoomId: ID!, content: String!): Message!
+    createChatRoom(name: String!): ChatRoom!
+    deleteChatRoom(chatRoomId: ID!): Boolean!
+    joinChatRoom(chatRoomId: ID!): ChatRoom!
+    joinChatRoomByLink(joinLink: String!): ChatRoom!
     signup(username: String!, email: String!, password: String!, profilePicture: String): AuthPayload!
     login(email: String!, password: String!): AuthPayload!
-    markMessageAsRead(messageId: ID!, userId: ID!): Message!
-    updateProfilePicture(userId: ID!, profilePicture: String!): User!
-    updateUsername(userId: ID!, username: String!): User!
+    markMessageAsRead(messageId: ID!): Message!
+    updateProfilePicture(profilePicture: String!): User!
+    updateUsername(username: String!): User!
   }
 
   type Subscription {

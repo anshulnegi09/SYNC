@@ -24,8 +24,8 @@ const GET_CHAT_ROOMS = gql`
 `;
 
 const CREATE_CHAT_ROOM = gql`
-  mutation CreateChatRoom($name: String!, $ownerId: ID!) {
-    createChatRoom(name: $name, ownerId: $ownerId) {
+  mutation CreateChatRoom($name: String!) {
+    createChatRoom(name: $name) {
       id
       name
       joinLink
@@ -56,7 +56,7 @@ const ChatDashboard = () => {
   const handleCreate = async () => {
     if (!roomName.trim()) return;
     try {
-      const res = await createChatRoom({ variables: { name: roomName, ownerId: userId } });
+      const res = await createChatRoom({ variables: { name: roomName } });
       setRoomName('');
       setCreateOpen(false);
       setSelectedRoomId(res.data.createChatRoom.id);

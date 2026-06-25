@@ -17,8 +17,8 @@ const GET_MESSAGES = gql`
 `;
 
 const SEND_MESSAGE = gql`
-  mutation SendMessage($chatRoomId: ID!, $content: String!, $senderId: ID!) {
-    sendMessage(chatRoomId: $chatRoomId, content: $content, senderId: $senderId) {
+  mutation SendMessage($chatRoomId: ID!, $content: String!) {
+    sendMessage(chatRoomId: $chatRoomId, content: $content) {
       id
       content
       sender { id username email profilePicture }
@@ -51,8 +51,8 @@ const MESSAGE_SUBSCRIPTION = gql`
 `;
 
 const DELETE_CHAT_ROOM = gql`
-  mutation DeleteChatRoom($chatRoomId: ID!, $userId: ID!) {
-    deleteChatRoom(chatRoomId: $chatRoomId, userId: $userId)
+  mutation DeleteChatRoom($chatRoomId: ID!) {
+    deleteChatRoom(chatRoomId: $chatRoomId)
   }
 `;
 
@@ -103,7 +103,7 @@ const ChatPanel = ({ chatRoomId, onRoomDeleted, onBack }) => {
 
   const handleSendMessage = async (content) => {
     try {
-      const { data } = await sendMessage({ variables: { chatRoomId, content, senderId: userId } });
+      const { data } = await sendMessage({ variables: { chatRoomId, content } });
       if (data?.sendMessage) {
         setMessages((prev) => {
           const exists = prev.some((m) => m.id === data.sendMessage.id);
@@ -128,7 +128,7 @@ const ChatPanel = ({ chatRoomId, onRoomDeleted, onBack }) => {
 
   const handleDeleteRoom = async () => {
     try {
-      await deleteChatRoom({ variables: { chatRoomId, userId } });
+      await deleteChatRoom({ variables: { chatRoomId } });
       toast.success('Chat room deleted.');
       setShowDeleteConfirm(false);
       onRoomDeleted?.();

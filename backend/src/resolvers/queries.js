@@ -25,6 +25,12 @@ const queryResolvers = {
         })
         .exec();
       if (!chatRoom) throw new Error('Chat room not found');
+      
+      const isParticipant = chatRoom.participants.some(p => p.toString() === user.id);
+      if (!isParticipant) {
+        throw new Error('You are not a participant in this chat room');
+      }
+
       return chatRoom.messages;
     } catch (error) {
       console.error(error);
@@ -46,6 +52,12 @@ const queryResolvers = {
         .exec();
   
       if (!chatRoom) throw new Error('Chat room not found');      
+
+      const isParticipant = chatRoom.participants.some(p => p.id === user.id);
+      if (!isParticipant) {
+        throw new Error('You are not a participant in this chat room');
+      }
+
       return chatRoom;
     } catch (error) {
       console.error('Error fetching chat room:', error);

@@ -6,8 +6,8 @@ import { gql, useMutation } from '@apollo/client'
 import { toast } from 'react-toastify'
 
 const UPDATE_PROFILE_PICTURE = gql`
-  mutation UpdateProfilePicture($userId: ID!, $profilePicture: String!) {
-    updateProfilePicture(userId: $userId, profilePicture: $profilePicture) {
+  mutation UpdateProfilePicture($profilePicture: String!) {
+    updateProfilePicture(profilePicture: $profilePicture) {
       id
       username
       profilePicture
@@ -16,8 +16,8 @@ const UPDATE_PROFILE_PICTURE = gql`
 `;
 
 const UPDATE_USERNAME = gql`
-  mutation UpdateUsername($userId: ID!, $username: String!) {
-    updateUsername(userId: $userId, username: $username) {
+  mutation UpdateUsername($username: String!) {
+    updateUsername(username: $username) {
       id
       username
     }
@@ -94,7 +94,7 @@ const Header = () => {
   const handleUpdatePicture = async () => {
     if (!newPicture) return;
     try {
-      const res = await updateProfilePicture({ variables: { userId, profilePicture: newPicture } });
+      const res = await updateProfilePicture({ variables: { profilePicture: newPicture } });
       localStorage.setItem('profilePicture', res.data.updateProfilePicture.profilePicture);
       window.dispatchEvent(new Event('profileUpdated'));
       toast.success('Profile picture updated!');
@@ -110,7 +110,7 @@ const Header = () => {
       return;
     }
     try {
-      const res = await updateUsername({ variables: { userId, username: newUsername } });
+      const res = await updateUsername({ variables: { username: newUsername } });
       localStorage.setItem('username', res.data.updateUsername.username);
       window.dispatchEvent(new Event('profileUpdated'));
       toast.success('Username updated!');

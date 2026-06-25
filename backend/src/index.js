@@ -45,6 +45,16 @@ const serverCleanup = useServer(
 // Apollo Server Setup (v4)
 const apolloServer = new ApolloServer({
   schema,
+  formatError: (formattedError, error) => {
+    // Strip out the "Did you mean..." field suggestion from the error message in production
+    if (process.env.NODE_ENV === 'production') {
+      return {
+        ...formattedError,
+        message: formattedError.message.replace(/Did you mean ".+?"\?/g, ''),
+      };
+    }
+    return formattedError;
+  },
   plugins: [
     // Proper shutdown for the HTTP server
     ApolloServerPluginDrainHttpServer({ httpServer }),
