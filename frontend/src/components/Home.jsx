@@ -31,7 +31,7 @@ function Home() {
           </h1>
 
           <p className="text-xl text-gray-400 mb-10 max-w-xl mx-auto leading-relaxed">
-            Private rooms, instant delivery, live subscriptions — SYNC keeps your team connected in real time.
+            Private rooms, instant delivery, live subscriptions, SYNC keeps your team connected in real time.
           </p>
 
           {/* CTA buttons */}
