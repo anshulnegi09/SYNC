@@ -76,7 +76,14 @@ const Signup = () => {
       localStorage.setItem('profilePicture', user.profilePicture || '')
       // Dispatch event so other components know profile changed
       window.dispatchEvent(new Event('profileUpdated'))
-      navigate('/chat-rooms')
+      
+      const pendingJoinLink = localStorage.getItem('pendingJoinLink')
+      if (pendingJoinLink) {
+        localStorage.removeItem('pendingJoinLink')
+        navigate(`/join/${pendingJoinLink}`)
+      } else {
+        navigate('/chat-rooms')
+      }
     } catch (err) {
       setErrorMsg(err.message || 'Signup failed. Please try again.')
     }

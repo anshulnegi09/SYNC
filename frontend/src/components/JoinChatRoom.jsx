@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { gql, useMutation } from '@apollo/client'
+import { toast } from 'react-toastify'
 import { useParams, useNavigate } from 'react-router-dom'
 
 const JOIN_CHAT_ROOM_BY_LINK = gql`
@@ -23,12 +24,21 @@ const JoinChatRoom = () => {
 
   useEffect(() => {
     const joinChatRoom = async () => {
+      if (!userId) {
+        localStorage.setItem('pendingJoinLink', joinLink)
+        toast.info('Please log in or sign up to join this room.')
+        navigate('/login')
+        return
+      }
+
       try {
-        const response = await joinChatRoomByLink({ variables: { joinLink, userId } })
-        const chatRoomId = response.data.joinChatRoomByLink.id
-        navigate(`/chat-room/${chatRoomId}`)
+        await joinChatRoomByLink({ variables: { joinLink, userId } })
+        toast.success('Successfully joined the room!')
+        navigate('/chat-rooms')
       } catch (error) {
         console.error('Error joining chat room:', error.message)
+        toast.error(error.message || 'Failed to join room. Link may be invalid.')
+        navigate('/chat-rooms')
       }
     }
 

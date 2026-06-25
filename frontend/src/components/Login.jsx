@@ -36,7 +36,14 @@ const Login = () => {
       localStorage.setItem('userId', user.id)
       localStorage.setItem('email', user.email)
       localStorage.setItem('profilePicture', user.profilePicture || '')
-      navigate('/chat-rooms')
+      
+      const pendingJoinLink = localStorage.getItem('pendingJoinLink')
+      if (pendingJoinLink) {
+        localStorage.removeItem('pendingJoinLink')
+        navigate(`/join/${pendingJoinLink}`)
+      } else {
+        navigate('/chat-rooms')
+      }
     } catch (err) {
       setErrorMsg(err.message || 'Login failed. Please try again.')
     }
