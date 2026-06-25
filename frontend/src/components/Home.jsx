@@ -24,17 +24,10 @@ function Home() {
       {/* Main content */}
       <main className="relative z-10 flex-grow flex items-center justify-center px-4">
         <div className="text-center max-w-3xl mx-auto">
-
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass mb-8 text-sm text-purple-300 font-medium">
-            <span className="w-2 h-2 rounded-full bg-green-400 online-dot inline-block" />
-            Real-time messaging, zero latency
-          </div>
-
           {/* Headline */}
           <h1 className="text-6xl md:text-7xl font-extrabold text-white mb-6 leading-tight tracking-tight">
             Sync up your{' '}
-            <span className="gradient-text">conversations</span>
+            <span>conversations</span>
           </h1>
 
           <p className="text-xl text-gray-400 mb-10 max-w-xl mx-auto leading-relaxed">
@@ -45,27 +38,18 @@ function Home() {
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <Link
               to={username ? '/chat-rooms' : '/signup'}
-              className="btn-glow px-8 py-3.5 text-base font-semibold text-white rounded-full transition-all duration-300"
+              className="bg-white text-black px-8 py-3.5 text-base font-semibold rounded-full hover:bg-gray-200 transition-all duration-300"
             >
               {username ? '🚀 Go to Chats' : 'Get Started Free'}
             </Link>
             {!username && (
               <Link
                 to="/login"
-                className="px-8 py-3.5 text-base font-semibold text-gray-300 rounded-full glass hover:text-white transition-all duration-300"
+                className="px-8 py-3.5 text-base font-semibold text-gray-300 rounded-full border border-white/20 hover:bg-white/10 transition-all duration-300"
               >
                 Sign In
               </Link>
             )}
-          </div>
-
-          {/* Feature pills */}
-          <div className="flex flex-wrap justify-center gap-3 mt-12">
-            {['⚡ WebSocket Subscriptions', '🔒 JWT Auth', '📡 Live Message Delivery', '🏠 Private Rooms', '🔗 Invite Links'].map((f) => (
-              <span key={f} className="px-3 py-1 rounded-full text-xs text-gray-400 glass">
-                {f}
-              </span>
-            ))}
           </div>
         </div>
       </main>
